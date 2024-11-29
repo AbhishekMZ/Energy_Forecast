@@ -1,0 +1,74 @@
+{
+    "system": {
+        "memory_threshold": 0.8,
+        "chunk_size": 10000,
+        "n_workers": 4,
+        "cache_dir": ".cache"
+    },
+    "data": {
+        "validation_split": 0.2,
+        "test_split": 0.1,
+        "random_seed": 42,
+        "feature_columns": [],
+        "target_column": "consumption"
+    },
+    "model_configs": {
+        "random_forest": {
+            "n_estimators": 100,
+            "max_depth": null,
+            "min_samples_split": 2,
+            "min_samples_leaf": 1,
+            "max_features": "auto"
+        },
+        "lightgbm": {
+            "num_leaves": 31,
+            "max_depth": -1,
+            "learning_rate": 0.1,
+            "n_estimators": 100,
+            "subsample": 1.0,
+            "colsample_bytree": 1.0
+        },
+        "xgboost": {
+            "max_depth": 6,
+            "learning_rate": 0.1,
+            "n_estimators": 100,
+            "subsample": 1.0,
+            "colsample_bytree": 1.0
+        },
+        "deep_learning": {
+            "layers": [64, 32, 16],
+            "activation": "relu",
+            "dropout_rate": 0.2,
+            "learning_rate": 0.001,
+            "batch_size": 32,
+            "epochs": 100
+        },
+        "ensemble": {
+            "models": ["random_forest", "lightgbm", "xgboost"],
+            "weights": null,
+            "stack_meta_model": "ridge"
+        }
+    },
+    "optimization": {
+        "metric": "rmse",
+        "n_trials": 100,
+        "timeout": 3600,
+        "n_jobs": -1
+    },
+    "validation": {
+        "cv_folds": 5,
+        "shuffle": true,
+        "metrics": ["mse", "rmse", "mae", "r2"]
+    },
+    "visualization": {
+        "theme": "plotly",
+        "save_format": "html",
+        "width": 800,
+        "height": 500
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "pipeline.log"
+    }
+}
