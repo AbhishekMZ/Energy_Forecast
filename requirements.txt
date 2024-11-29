@@ -38,13 +38,18 @@ mypy>=0.910         # Type checking
 sphinx>=4.1.0       # Documentation generator
 sphinx-rtd-theme>=0.5.2  # Documentation theme
 
-# Web Framework (if needed)
-flask>=2.0.0        # Web framework
-gunicorn>=20.1.0    # WSGI server
+# Web Framework
+fastapi>=0.68.0
+uvicorn>=0.15.0
+python-multipart==0.0.6
+aiofiles>=0.7.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 
-# Database (if needed)
-sqlalchemy>=1.4.0   # Database ORM
-psycopg2>=2.9.0    # PostgreSQL adapter
+# Database
+SQLAlchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9  # For PostgreSQL support
 
 # Logging and Monitoring
 python-json-logger>=2.0.0  # JSON logging
