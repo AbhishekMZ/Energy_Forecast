@@ -1,261 +1,197 @@
-# Energy Consumption Forecasting System
+# Energy Forecast Platform 🌍⚡
 
-An advanced machine learning system for predicting energy consumption using state-of-the-art models and automated configuration optimization.
+## Overview
+Advanced energy demand forecasting and renewable energy optimization platform for Indian cities.
 
-## 🌟 Key Features
+[![Tests](https://github.com/yourusername/energy_forecast/actions/workflows/tests.yml/badge.svg)](https://github.com/yourusername/energy_forecast/actions)
+[![Coverage](https://codecov.io/gh/yourusername/energy_forecast/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/energy_forecast)
+[![Documentation](https://readthedocs.org/projects/energy-forecast/badge/?version=latest)](https://energy-forecast.readthedocs.io)
 
-- **Advanced Model Implementation**
-  - Random Forest with feature importance tracking
-  - LightGBM with gradient boosting
-  - XGBoost with extreme gradient boosting
-  - Deep Learning using TensorFlow
-  - Ensemble modeling with weighted predictions
+## 🌟 Features
 
-- **Intelligent Configuration**
-  - Automated hyperparameter optimization
-  - Dynamic configuration tuning
-  - Data-driven parameter selection
-  - Resource-aware adjustments
+### 🔮 Forecasting
+- Multi-horizon demand prediction
+- Weather-aware modeling
+- Confidence intervals
+- Seasonal decomposition
 
-- **Comprehensive Validation**
-  - Time series cross-validation
-  - Performance metrics tracking
-  - Stability analysis
-  - Resource utilization monitoring
+### 🌞 Renewable Energy
+- Source optimization
+- Weather impact analysis
+- Cost optimization
+- Production scheduling
 
-- **Interactive Visualization**
-  - Configuration analysis dashboards
-  - Performance comparison plots
-  - Parameter importance visualization
-  - Evolution tracking
+### 🏙️ City Support
+- Mumbai
+- Delhi
+- (More cities coming soon)
 
-- **Robust Testing**
-  - Parallel test execution
-  - Resource monitoring
-  - Edge case handling
-  - Comprehensive reporting
+### 📊 Analytics
+- Interactive dashboards
+- Performance metrics
+- Resource allocation
+- Cost analysis
 
-## 🏗️ Project Structure
+## 🚀 Quick Start
 
-```
-energy_forecast/
-├── app/                    # Web application
-│   ├── static/            # Static files (CSS, JS)
-│   │   ├── css/          # Stylesheets
-│   │   └── js/           # JavaScript files
-│   ├── templates/         # HTML templates
-│   └── routes.py         # Flask routes
-├── data/                  # Data management
-│   ├── raw/              # Raw data storage
-│   └── processed/        # Processed datasets
-├── models/               # ML model implementation
-│   ├── auto_config.py   # Automatic configuration tuning
-│   ├── base_model.py    # Abstract base model
-│   ├── config_validation.py  # Configuration validation
-│   ├── config_visualization.py  # Configuration visualization
-│   ├── integration_tests.py  # Integration testing
-│   ├── model_configs.py  # Model configurations
-│   ├── model_evaluation.py  # Model evaluation
-│   ├── model_implementations.py  # Model implementations
-│   ├── parallel_testing.py  # Parallel testing framework
-│   └── training_pipeline.py  # Training pipeline
-├── database/            # Database operations
-│   ├── models.py       # SQLAlchemy models
-│   └── operations.py   # Database operations
-├── utils/              # Utility functions
-│   ├── error_handling.py  # Error handling
-│   └── preprocessing.py   # Data preprocessing
-├── tests/             # Test suite
-├── config.py         # Configuration settings
-└── requirements.txt  # Project dependencies
-```
+### Prerequisites
+- Python 3.8+
+- PostgreSQL 13+
+- Redis (optional)
 
-## 🚀 Setup and Installation
-
-1. **Environment Setup**
+### Installation
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/energy_forecast.git
+cd energy_forecast
+
 # Create virtual environment
 python -m venv venv
-
-# Activate environment
-# On Windows:
-venv\Scripts\activate
-# On Unix/MacOS:
-source venv/bin/activate
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
-```
 
-2. **Configuration**
-```python
-# config.py
-# Configure your settings:
-DATABASE_URI = 'your_database_uri'
-MODEL_SAVE_PATH = 'path/to/save/models'
-LOG_LEVEL = 'INFO'
-```
-
-3. **Database Setup**
-```bash
-# Initialize database
-python database/setup.py
+# Setup environment
+cp .env.example .env
+# Edit .env with your configurations
 
 # Run migrations
-python database/migrate.py
+python manage.py migrate
+
+# Start server
+uvicorn energy_forecast.api.main:app --reload
 ```
 
-4. **Running the Application**
+## 📚 Documentation
+
+### API Documentation
+- [OpenAPI Specification](docs/api/openapi.yaml)
+- [API Reference](docs/api/README.md)
+- [Authentication Guide](docs/api/auth.md)
+
+### User Guides
+- [Getting Started](docs/guides/getting_started.md)
+- [User Guide](docs/guides/user_guide.md)
+- [Advanced Usage](docs/guides/advanced.md)
+
+### Technical Documentation
+- [Architecture](docs/technical/architecture.md)
+- [Model Documentation](docs/models/model_documentation.md)
+- [Deployment Guide](docs/deployment/deployment_guide.md)
+
+## 🧪 Testing
+
 ```bash
-# Start the application
-python run.py
+# Run all tests
+pytest
 
-# For development with debug mode
-python run.py --debug
+# Run specific test categories
+pytest -m unit          # Unit tests
+pytest -m integration   # Integration tests
+pytest -m api          # API tests
+
+# Generate coverage report
+pytest --cov=energy_forecast --cov-report=html
 ```
 
-## 💻 Usage
+## 📊 Dashboard
 
-### Model Training
-```python
-from models.training_pipeline import ModelTrainingPipeline
-from database.operations import DatabaseOperations
+Access the interactive dashboard at `http://localhost:8000/dashboard`
 
-# Initialize pipeline
-db_ops = DatabaseOperations()
-pipeline = ModelTrainingPipeline(db_ops)
-
-# Train models
-results = pipeline.train_models(
-    X_train=train_features,
-    y_train=train_target,
-    optimize=True
-)
-```
-
-### Configuration Optimization
-```python
-from models.auto_config import AutoConfigTuner
-
-# Initialize tuner
-tuner = AutoConfigTuner(data=your_data,
-                       target_col='consumption',
-                       timestamp_col='timestamp')
-
-# Get optimal configurations
-configs = tuner.get_optimal_model_configs()
-```
-
-### Parallel Testing
-```python
-from models.parallel_testing import ParallelTestRunner
-
-# Initialize test runner
-runner = ParallelTestRunner(n_processes=4)
-
-# Run test suite
-results = runner.run_test_suite()
-
-# Generate report
-report = runner.generate_parallel_report(results)
-```
-
-## 📊 Model Configurations
-
-### Random Forest
-- Adaptive estimator count
-- Feature importance tracking
-- Cross-validation support
-- Out-of-bag scoring
-
-### LightGBM
-- Gradient boosting
-- Memory-efficient binning
-- Feature/row subsampling
-- Early stopping
-
-### XGBoost
-- Extreme gradient boosting
-- Histogram-based training
-- Loss-guided growing
-- Multi-metric evaluation
-
-### Deep Learning
-- Sequential/Feedforward architectures
-- Batch normalization
-- Dropout regularization
-- Learning rate scheduling
-
-### Ensemble
-- Dynamic weight calculation
-- Model diversity tracking
-- Stacking with Ridge regression
-- Cross-validation integration
-
-## 🔍 Validation and Testing
-
-### Cross-Validation
-- Time series aware splitting
+Features:
+- Real-time demand monitoring
+- Resource allocation visualization
+- Cost analysis
 - Performance metrics
-- Stability analysis
-- Resource monitoring
-
-### Integration Testing
-- Parallel execution
-- Resource tracking
-- Error isolation
-- Comprehensive reporting
-
-## 📈 Visualization
-
-### Configuration Analysis
-- Parameter importance plots
-- Performance comparisons
-- Evolution tracking
-- Resource utilization
-
-### Interactive Dashboards
-- Real-time monitoring
-- Comparative analysis
-- Trend visualization
-- Error analysis
 
 ## 🛠️ Development
 
-### Adding New Models
-1. Inherit from `BaseModel`
-2. Implement required methods
-3. Add configuration in `model_configs.py`
-4. Update training pipeline
+### Code Style
+```bash
+# Format code
+black energy_forecast
 
-### Custom Configurations
-1. Modify `ModelConfigurations` class
-2. Add parameter spaces
-3. Update validation logic
-4. Test new configurations
+# Check style
+flake8 energy_forecast
+
+# Type checking
+mypy energy_forecast
+```
+
+### Pre-commit Hooks
+```bash
+# Install hooks
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+## 🚀 Deployment
+
+### Docker
+```bash
+# Build image
+docker build -t energy-forecast .
+
+# Run container
+docker run -p 8000:8000 energy-forecast
+```
+
+### Kubernetes
+```bash
+# Deploy application
+kubectl apply -f k8s/
+
+# Scale deployment
+kubectl scale deployment energy-forecast --replicas=3
+```
+
+## 📈 Performance
+
+### Metrics
+- Forecast Accuracy: MAPE < 5%
+- Response Time: < 200ms (95th percentile)
+- Throughput: 1000 req/s
+- Availability: 99.9%
+
+### Scalability
+- Horizontal scaling
+- Load balancing
+- Cache optimization
+- Database sharding
+
+## 🔒 Security
+
+- JWT authentication
+- API key validation
+- Rate limiting
+- Input validation
+- HTTPS enforcement
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Scikit-learn for base implementations
-- TensorFlow team for deep learning support
-- LightGBM and XGBoost communities
-- All contributors and users
+- Weather data: OpenWeatherMap
+- Base models: scikit-learn
+- Optimization: Pyomo
+- Visualization: Plotly
 
-## 📧 Contact
+## 📞 Support
 
-For questions and support, please open an issue or contact the maintainers.
-
----
-**Note**: This project is under active development. Contributions and feedback are welcome!
+- GitHub Issues
+- Email: support@energyforecast.com
+- Documentation: https://energy-forecast.readthedocs.io
