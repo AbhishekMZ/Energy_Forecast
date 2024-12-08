@@ -1,0 +1,81 @@
+apiVersion: 1
+
+groups:
+  - name: EnergyForecastAlerts
+    folder: Energy Forecast
+    interval: 1m
+    rules:
+      - name: High API Latency
+        condition: avg() > 2
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: rate(request_latency_seconds_sum[5m]) / rate(request_latency_seconds_count[5m])
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "API latency is above 2 seconds for the last 5 minutes"
+        labels:
+          severity: warning
+
+      - name: Low Cache Hit Ratio
+        condition: avg() < 0.5
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: cache_hit_ratio
+        noDataState: OK
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: "Cache hit ratio is below 50% for the last 10 minutes"
+        labels:
+          severity: warning
+
+      - name: High Model Inference Time
+        condition: avg() > 1
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: rate(model_inference_seconds_sum[5m]) / rate(model_inference_seconds_count[5m])
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Model inference time is above 1 second for the last 5 minutes"
+        labels:
+          severity: warning
+
+      - name: Database Connection Pool Near Capacity
+        condition: avg() > 80
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: db_connection_pool_size
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Database connection pool is above 80% capacity for the last 5 minutes"
+        labels:
+          severity: critical
+
+      - name: Large Batch Size
+        condition: avg() > 100
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              expr: histogram_quantile(0.95, sum(rate(batch_size_bucket[5m])) by (le))
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "95th percentile batch size is above 100 for the last 5 minutes"
+        labels:
+          severity: warning

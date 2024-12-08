@@ -2,11 +2,12 @@
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
 from datetime import datetime, timedelta
 import logging
+from ..utils.performance_monitoring import ModelProfiler
 
 from energy_forecast.core.models.pipeline import MLPipeline
 from energy_forecast.core.optimization.renewable_optimizer import RenewableOptimizer
@@ -25,6 +26,7 @@ class EnergyForecastModel(MLPipeline):
         self.city_data = CITIES[city]
         self.renewable_optimizer = RenewableOptimizer(city)
         self.scaler = StandardScaler()
+        self.profiler = ModelProfiler("energy_forecast")
         
     def prepare_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """Prepare specialized features for energy forecasting"""
@@ -140,94 +142,104 @@ class EnergyForecastModel(MLPipeline):
                 {'original_error': str(e)}
             )
     
-    def forecast_demand(
-        self,
-        current_data: pd.DataFrame,
-        forecast_horizon: int = 168  # 1 week
-    ) -> pd.DataFrame:
-        """Generate demand forecast with confidence intervals"""
-        try:
-            forecast_dates = pd.date_range(
-                start=current_data.index[-1],
-                periods=forecast_horizon + 1,
-                freq='H'
-            )[1:]
+    @classmethod
+    async def predict_batch(cls, batch_inputs: List[Dict[str, Any]]) -> List[Dict]:
+        """Process a batch of prediction requests."""
+        results = []
+        for input_data in batch_inputs:
+            model = cls(input_data["city"])
             
-            # Initialize forecast dataframe
-            forecast = pd.DataFrame(index=forecast_dates)
-            
-            # Generate features for forecast period
-            forecast_features = self._generate_forecast_features(
-                current_data,
-                forecast_dates
+            # Generate forecast
+            forecast = await model._forecast_demand(
+                input_data["weather"],
+                (input_data["end_date"] - input_data["start_date"]).days * 24
             )
             
-            # Make predictions
-            forecast['demand_mean'] = self.models['xgboost'].predict(forecast_features)
-            
-            # Add confidence intervals (using historical volatility)
-            volatility = current_data['total_demand'].std()
-            forecast['demand_lower'] = forecast['demand_mean'] - 1.96 * volatility
-            forecast['demand_upper'] = forecast['demand_mean'] + 1.96 * volatility
-            
-            return forecast
-            
-        except Exception as e:
-            raise ProcessingError(
-                "Error generating forecast",
-                {'original_error': str(e)}
+            # Optimize energy mix
+            energy_mix = await model._optimize_energy_mix(
+                forecast,
+                input_data["weather"]
             )
+            
+            results.append({
+                "demand_mean": forecast["demand_mean"],
+                "demand_lower": forecast["demand_lower"],
+                "demand_upper": forecast["demand_upper"],
+                "energy_mix": energy_mix["energy_mix"],
+                "schedule": energy_mix["schedule"],
+                "total_cost": energy_mix["total_cost"]
+            })
+            
+        return results
     
-    def optimize_energy_mix(
-        self,
-        demand_forecast: pd.DataFrame,
-        weather_forecast: pd.DataFrame
-    ) -> pd.DataFrame:
-        """Optimize energy mix for forecasted demand"""
-        try:
-            results = []
+    @profiler.profile_inference()
+    async def _forecast_demand(self, weather_data: Dict, horizon: int) -> Dict:
+        """Generate demand forecast with performance monitoring."""
+        forecast_dates = pd.date_range(
+            start=weather_data.index[-1],
+            periods=horizon + 1,
+            freq='H'
+        )[1:]
+        
+        # Initialize forecast dataframe
+        forecast = pd.DataFrame(index=forecast_dates)
+        
+        # Generate features for forecast period
+        forecast_features = self._generate_forecast_features(
+            weather_data,
+            forecast_dates
+        )
+        
+        # Make predictions
+        forecast['demand_mean'] = self.models['xgboost'].predict(forecast_features)
+        
+        # Add confidence intervals (using historical volatility)
+        volatility = weather_data['total_demand'].std()
+        forecast['demand_lower'] = forecast['demand_mean'] - 1.96 * volatility
+        forecast['demand_upper'] = forecast['demand_mean'] + 1.96 * volatility
+        
+        return forecast.to_dict()
+    
+    @profiler.profile_inference()
+    async def _optimize_energy_mix(self, forecast: Dict, weather_data: Dict) -> Dict:
+        """Optimize energy mix with performance monitoring."""
+        results = []
+        
+        for timestamp in forecast['demand_mean'].index:
+            demand = forecast['demand_mean'][timestamp]
+            weather = weather_data.loc[timestamp]
             
-            for timestamp in demand_forecast.index:
-                demand = demand_forecast.loc[timestamp, 'demand_mean']
-                weather = weather_forecast.loc[timestamp]
-                
-                # Get current capacity for each source
-                current_capacity = self.city_data['energy_sources']
-                
-                # Optimize energy mix
-                energy_mix = self.renewable_optimizer.optimize_energy_mix(
-                    demand,
-                    weather,
-                    current_capacity
-                )
-                
-                # Get production schedule
-                schedule = self.renewable_optimizer.get_production_schedule(
-                    energy_mix,
-                    timestamp
-                )
-                
-                # Calculate total cost
-                total_cost = sum(
-                    amount * RENEWABLE_SOURCES[source]['cost_per_mwh']
-                    for source, amount in energy_mix.items()
-                )
-                
-                results.append({
-                    'timestamp': timestamp,
-                    'demand': demand,
-                    'energy_mix': energy_mix,
-                    'schedule': schedule,
-                    'total_cost': total_cost
-                })
+            # Get current capacity for each source
+            current_capacity = self.city_data['energy_sources']
             
-            return pd.DataFrame(results)
-            
-        except Exception as e:
-            raise ProcessingError(
-                "Error optimizing energy mix",
-                {'original_error': str(e)}
+            # Optimize energy mix
+            energy_mix = self.renewable_optimizer.optimize_energy_mix(
+                demand,
+                weather,
+                current_capacity
             )
+            
+            # Get production schedule
+            schedule = self.renewable_optimizer.get_production_schedule(
+                energy_mix,
+                timestamp
+            )
+            
+            # Calculate total cost
+            total_cost = sum(
+                amount * RENEWABLE_SOURCES[source]['cost_per_mwh']
+                for source, amount in energy_mix.items()
+            )
+            
+            results.append({
+                'timestamp': timestamp,
+                'demand': demand,
+                'energy_mix': energy_mix,
+                'schedule': schedule,
+                'total_cost': total_cost
+            })
+        
+        return pd.DataFrame(results).to_dict(orient='records')[0]
     
     def _get_season(self, dates: pd.DatetimeIndex) -> pd.Series:
         """Determine season for given dates"""
